@@ -1,0 +1,30 @@
+#!/bin/bash
+
+echo "client配置nfs"
+apt-get install nfs-common -y
+showmount -e gpu01
+mount -t nfs gpu01:/opt /opt
+mount -t nfs gpu01:/home /home
+
+echo "设置开机自动挂载"
+touch /etc/rc.local
+echo '#!/bin/bash
+mount -t nfs gpu01:/opt /opt
+mount -t nfs gpu01:/home /home' >> /etc/rc.local
+chmod +x /etc/rc.local
+
+echo "client配置nis"
+apt-get install nis -y
+domainname TS10K
+touch /etc/defaultdomain
+echo 'TS10K' > /etc/defaultdomain
+echo '修改/etc/yp.conf'
+echo '
+domain TS10K server gpu01' >> /etc/yp.conf
+echo '修改/etc/nsswitch.conf'
+sed -e 's!^passwd:         files systemd!passwd:         files systemd nis!g' \
+    -e 's!^group:          files systemd!group:          files systemd nis!g' \
+    -e 's!^shadow:         files!shadow:         files nis!g' \
+    -i /etc/nsswitch.conf
+service ypbind start
+systemctl enable ypbind

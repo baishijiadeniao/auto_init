@@ -1,0 +1,15 @@
+#!/bin/bash
+
+echo '请务必修改用户名'
+array=(user1 user2 user3)
+for username in  ${array[@]};
+do
+    echo $username
+    useradd -m $username
+    echo ${username}:123456 | chpasswd
+    usermod -s /bin/bash $username
+    # echo “123456” | passwd --stdin ${username} &> /dev/null
+done
+
+# make /var/yp
+#userdel -r test

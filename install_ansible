@@ -1,0 +1,32 @@
+#!/bin/bash
+
+echo "更换中科大的源"
+sed -i "s/cn.archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list
+
+apt update
+apt install software-properties-common -y
+apt-add-repository --yes --update ppa:ansible/ansible #ENTER
+apt install ansible   -y
+
+echo "请务必修改ip"
+echo '172.27.7.24 gpu01
+172.27.7.25 gpu02
+172.27.7.26 gpu03
+172.27.7.27 gpu04' >> /etc/hosts
+
+#写入/etc/ansible/hosts
+echo "请务必修改域名"
+echo '
+[all]
+gpu01
+gpu02
+gpu03
+gpu04
+
+[server]
+gpu01
+
+[other]
+gpu02
+gpu03
+gpu04' >> /etc/ansible/hosts

@@ -1,0 +1,39 @@
+#!/bin/bash
+
+echo "server配置nfs"
+apt-get install nfs-kernel-server -y
+echo "配置导出目录"
+echo '
+/home *(rw,insecure,no_root_squash,async)
+/opt *(rw,insecure,no_root_squash,async)' >> /etc/exports
+exportfs -r
+/etc/init.d/rpcbind restart
+/etc/init.d/nfs-kernel-server restart
+echo '查看本机是否可链接'
+showmount -e localhost     
+
+echo "添加用户"
+. ./user_add
+
+echo "server配置nis"
+apt-get install nis -y
+domainname TS10K
+touch /etc/defaultdomain
+echo 'TS10K' > /etc/defaultdomain
+echo '修改/etc/yp.conf'
+echo '
+domain TS10K server gpu01' >> /etc/yp.conf
+echo '修改/etc/default/nis'
+sed -e 's!^NISSERVER=false!NISSERVER=master!g' -i /etc/default/nis
+
+echo '修改/etc/ypserv.securenets'
+sed -e 's!^0.0.0.0!#0.0.0.0!g' -i /etc/ypserv.securenets
+echo '请务必修改网段'
+sed -e '/^#0.0/a\255.255.255.0   172.27.7.0' -i /etc/ypserv.securenets 
+
+
+echo '启动服务'
+service ypserv restart
+systemctl enable ypserv
+echo '生成数据据文件'
+/usr/lib/yp/ypinit -m  

@@ -1,0 +1,72 @@
+#!/bin/bash
+
+echo "更换中科大的源"
+sed -i "s/cn.archive.ubuntu.com/mirrors.ustc.edu.cn/g" /etc/apt/sources.list
+
+echo "查看是否关闭selinux"
+apt install selinux-utils
+getenforce
+
+echo "请务必修改hostname和ip"
+node=`hostname`
+#请务必修改hostname和ip
+if [ $node != "gpu01" ]
+then
+echo "修改/etc/hosts"
+echo '172.27.7.24 gpu01
+172.27.7.25 gpu02
+172.27.7.26 gpu03
+172.27.7.27 gpu04' >> /etc/hosts
+fi
+
+echo "关闭防火墙"
+apt install ufw -y
+ufw disable
+
+echo "修改系统启动模式为多用户（非图形）"
+systemctl set-default multi-user.target   
+
+# echo "apt更新"
+apt update
+
+# apt list --upgradable
+# apt upgrade
+
+apt install net-tools -y
+
+echo "安装gcc"
+apt install build-essential -y
+
+echo "安装一些常用工具"
+apt install make -y
+apt install cmake -y
+apt-get install vim  -y
+apt-get install unrar -y
+apt install curl -y
+apt install unzip -y
+
+
+echo "安装numactl"
+apt install numactl -y
+apt-get install rpcbind -y
+
+
+echo "配置python"
+apt-get install python-pip -y
+apt install python-is-python3 -y
+apt install python3-pip -y
+pip3 install pip -U
+#设置清华源
+pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+pip install virtualenv virtualenv-clone virtualenvwrapper
+
+echo "配置ntp服务器"
+apt-get install ntp -y
+systemctl status ntp
+# ntpq -p
+
+echo "安装nvidia docker"
+# curl -sSL https://get.daocloud.io/docker | sh
+curl -fsSL https://get.docker.com | bash -s docker --mirror Aliyun
+systemctl start docker
+systemctl enable docker
